@@ -5,7 +5,7 @@ class User(AbstractUser):
     name = models.CharField(max_length=100)
     follows = models.JSONField(default=list, blank=True)
     notifications = models.JSONField(default=list, blank=True)
-    modified_at = models.DateTimeField(auto_now=True)
+    modified_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.username

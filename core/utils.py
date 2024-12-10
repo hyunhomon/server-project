@@ -30,3 +30,6 @@ def notify_followers(user, name, content):
             "category_content": content
         })
         follower.save()
+    
+    user.modified_at = now()
+    user.save(update_fields=["modified_at"])
