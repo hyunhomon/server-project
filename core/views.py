@@ -84,18 +84,20 @@ def get_user_categories(request):
 @decorators.api_view(['POST'])
 @decorators.permission_classes([permissions.IsAuthenticated])
 def add_category(request):
-    user = request.user
     data = request.data
 
+    username = data.get('username')
     name = data.get('name')
     content = data.get('content', '')
+
+    target_user = get_object_or_404(models.User, username=username)
 
     if not name:
         return response.Response({"error": "Category name is required."}, status=status.HTTP_400_BAD_REQUEST)
     
-    category = models.Category.objects.create(owner=user, name=name, content=content)
+    category = models.Category.objects.create(owner=target_user, name=name, content=content)
 
-    utils.notify_followers(user, name, content)
+    utils.notify_followers(target_user, name, content)
 
     return response.Response({
         "message": "Category added successfully.",
@@ -109,7 +111,6 @@ def add_category(request):
 @decorators.api_view(['POST'])
 @decorators.permission_classes([permissions.IsAuthenticated])
 def mod_category(request):
-    user = request.user
     data = request.data
 
     id = data.get('id')
@@ -122,7 +123,7 @@ def mod_category(request):
         return response.Response({"error": "Category name is required."}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        category = models.Category.objects.get(id=id, owner=user)
+        category = models.Category.objects.get(id=id)
     except models.Category.DoesNotExist:
         return response.Response({"error": "Category not found or you do not have permission to edit it."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -130,7 +131,7 @@ def mod_category(request):
     category.content = content
     category.save()
 
-    utils.notify_followers(user, name, content)
+    utils.notify_followers(category.owner, name, content)
 
     return response.Response({
         "message": "Category updated successfully.",
